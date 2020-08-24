@@ -52,7 +52,7 @@ import java.util.List;
 
 import butterknife.BindView;
 
-public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> implements QualitySheetContract.View, View.OnClickListener, AdapterView.OnItemSelectedListener {
+public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> implements QualitySheetContract.View, View.OnClickListener, AdapterView.OnItemSelectedListener, ViewCallback{
 
     private static final String TAG = QualitySheetActivity.class.getSimpleName();
 
@@ -64,6 +64,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
     @BindView(R.id.spin_house_number)              Spinner spinHousenumber;
     @BindView(R.id.spin_worker_name)               SearchableSpinner spinWorkerName;
     @BindView(R.id.spin_adi_number)                Spinner spinAdiNumber;
+
 
 
     //@formatter:on
@@ -84,16 +85,12 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
     QualityInfoDataSource qualityInfoDataSource;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_quality_sheet);
 
-
         initResources();
-
-
 
     }
 
@@ -105,6 +102,8 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         spinJobName.setEnabled(false);
         spinHousenumber.setEnabled(false);
         spinWorkerName.setEnabled(false);
+        spinAuditorName.setEnabled(true);
+
 
         WorkersName       = new ArrayList<>();
         ADICode           = new ArrayList<>();
@@ -120,6 +119,10 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
 
         spinnerWeekNumber = ApplicationUtils.getDateTime();
+
+        initListners();
+
+        initSpinners();
 
         if(ApplicationUtils.isConnected(getApplicationContext())){
 
@@ -138,20 +141,25 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
             List<String> arrayList1 = Arrays.asList(getResources().getStringArray(R.array.fav_adi));
             ArrayAdapter<String> arrayAdapter1 = new ArrayAdapter<String>(getApplicationContext(), R.layout.layout_spinner_label, arrayList1);
             arrayAdapter1.setDropDownViewResource(R.layout.layout_spinner_label);
-            spinAdiNumber.setAdapter(arrayAdapter);
+            spinAdiNumber.setAdapter(arrayAdapter1);
+
+
 
 
         }
 
 
-        initListners();
 
-        initSpinners();
 
         navigateToFragments();
 
     }
 
+
+
+    private int getCategoryPosCombinedData(String category) {
+        return ssCombinedData.lastIndexOf(category);
+    }
     private void getQualityPercentageFromSheet() {
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, "https://script.google.com/macros/s/AKfycbxB6eqo6n7rPW1jzuGfJOxojLEqI_hfOMhcg3BCPc3ssnCrJ5o/exec?action=getFavData",
@@ -245,6 +253,8 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
     }
 
+
+
     private void setSpinner() {
 
         spinWorkerName.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, WorkersName));
@@ -252,7 +262,6 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
 
     }
-
 
 
     private void initListners() {
@@ -265,6 +274,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
                 if (spinnerAuditorName != null && spinnerAuditorName.length() > 0 && !spinnerAuditorName.equalsIgnoreCase("SELECT")) {
 
+                    spinAuditorName.setEnabled(true);
                     spinJobName.setEnabled(false);
                     spinHousenumber.setEnabled(true);
                     spinWorkerName.setEnabled(false);
@@ -293,6 +303,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
                 if (spinnerHouseNumber != null && spinnerHouseNumber.length() > 0 && !spinnerHouseNumber.equalsIgnoreCase("SELECT")) {
 
+                    spinAuditorName.setEnabled(true);
                     spinJobName.setEnabled(false);
                     spinHousenumber.setEnabled(true);
                     spinWorkerName.setEnabled(true);
@@ -328,6 +339,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                 spinAdiNumber.setSelection(workerPosition);
 
                 if (spinnerWorkerName != null && spinnerWorkerName.length() > 0 && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
+                    spinAuditorName.setEnabled(true);
 
                     spinJobName.setEnabled(true);
                     spinHousenumber.setEnabled(true);
@@ -354,16 +366,19 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
                 adiNumber1 = parent.getItemAtPosition(workerPosition).toString();
 
-
                 if (adiNumber1 != null && adiNumber1.trim().length() > 0 && !adiNumber1.equalsIgnoreCase("SELECT")) {
 
                     spinnerAdiNumber = adiNumber1;
+                    spinAuditorName.setEnabled(true);
 
                     spinJobName.setEnabled(true);
                     spinHousenumber.setEnabled(true);
                     spinWorkerName.setEnabled(true);
 
 
+                }else {
+
+                    Log.e(TAG, "Adapter is null" );
                 }
             }
 
@@ -377,7 +392,6 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
 
     private void navigateToFragments() {
-
 
         if (spinnerJobName == null) {
 
@@ -396,6 +410,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
     }
 
     private void initSpinners() {
+
 
         //------------------------------JOB_NAME----------------------------------------
 
@@ -418,14 +433,11 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         //------------------------------AUDITOR_NAME----------------------------------------
 
         ArrayList<SpinInfo> arrayList = new ArrayList<>();
+        //arrayList.add(new SpinInfo(0, "SELECT"));
         arrayList.add(new SpinInfo(0, "SELECT"));
-        arrayList.add(new SpinInfo(1, "Deep Singh"));
-        arrayList.add(new SpinInfo(2, "Melody Taylor"));
-        arrayList.add(new SpinInfo(3, "Nau Pesa"));
-        arrayList.add(new SpinInfo(4, "Francis Dee"));
-        arrayList.add(new SpinInfo(5, "Nilesh Patel"));
-        arrayList.add(new SpinInfo(6, "Gurjant Singh"));
-        arrayList.add(new SpinInfo(7, "Tevita Fetuani"));
+        arrayList.add(new SpinInfo(1, "Nick Wang"));
+        arrayList.add(new SpinInfo(2, "Heather Feetham"));
+        arrayList.add(new SpinInfo(3, "Dasharatha Weerakoon"));
 
 
         ArrayAdapter<SpinInfo> arrayAdapter = new ArrayAdapter<SpinInfo>(getApplicationContext(), R.layout.layout_spinner_label, arrayList);
@@ -437,6 +449,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         //------------------------------HOUSE_NUMBER----------------------------------------
 
         ArrayList<SpinInfo> list = new ArrayList<>();
+        //list.add(new SpinInfo(0, "SELECT"));
         list.add(new SpinInfo(0, "SELECT"));
         list.add(new SpinInfo(1, "FAV 1"));
         list.add(new SpinInfo(2, "FAV 2"));
@@ -451,6 +464,9 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         ApplicationUtils.hideKeypad(getApplicationContext(), spinAuditorName);
         ApplicationUtils.hideKeypad(getApplicationContext(), spinAdiNumber);
         ApplicationUtils.hideKeypad(getApplicationContext(), spinWorkerName);
+
+
+
 
     }
 
@@ -488,7 +504,6 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         spinWorkerName.setSelection(0);
         spinAdiNumber.setSelection(0);
 
-
     }
 
 
@@ -510,6 +525,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinHousenumber.setEnabled(false);
                     spinWorkerName.setEnabled(false);
                     spinAdiNumber.setEnabled(false);
+                    spinJobName.setEnabled(false);
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putString("txtJobName", spinnerJobName);
@@ -531,6 +547,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinHousenumber.setEnabled(false);
                     spinWorkerName.setEnabled(false);
                     spinAdiNumber.setEnabled(false);
+                    spinJobName.setEnabled(false);
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putString("txtJobName", spinnerJobName);
@@ -552,6 +569,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinHousenumber.setEnabled(false);
                     spinWorkerName.setEnabled(false);
                     spinAdiNumber.setEnabled(false);
+                    spinJobName.setEnabled(false);
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putString("txtJobName", spinnerJobName);
@@ -573,6 +591,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinHousenumber.setEnabled(false);
                     spinWorkerName.setEnabled(false);
                     spinAdiNumber.setEnabled(false);
+                    spinJobName.setEnabled(false);
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putString("txtJobName", spinnerJobName);
@@ -594,6 +613,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinHousenumber.setEnabled(false);
                     spinWorkerName.setEnabled(false);
                     spinAdiNumber.setEnabled(false);
+                    spinJobName.setEnabled(false);
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putString("txtJobName", spinnerJobName);
@@ -615,6 +635,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinHousenumber.setEnabled(false);
                     spinWorkerName.setEnabled(false);
                     spinAdiNumber.setEnabled(false);
+                    spinJobName.setEnabled(false);
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putString("txtJobName", spinnerJobName);
@@ -632,6 +653,11 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                 } else if (jobName.equalsIgnoreCase("SELECT")) {
 
                     clearSpinners();
+                    spinAuditorName.setEnabled(true);
+                    spinHousenumber.setEnabled(false);
+                    spinWorkerName.setEnabled(false);
+                    spinAdiNumber.setEnabled(false);
+                    spinJobName.setEnabled(false);
                     Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame_layout_main);
                     if (fragment != null) {
                         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -643,6 +669,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
 
                 break;
+
 
             case R.id.spin_auditor_name:
 
@@ -659,6 +686,54 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
                     clearSpinners();
                 }
+
+                break;
+
+            case R.id.spin_worker_name:
+
+
+                ApplicationUtils.hideKeypad(getApplicationContext(), spinWorkerName);
+
+                ApplicationUtils.hideKeypad(getApplicationContext(), spinAdiNumber);
+
+                workerName1 = adapterView.getItemAtPosition(i).toString();
+
+                workerPosition = spinWorkerName.getSelectedItemPosition();
+
+                spinAdiNumber.setSelection(workerPosition);
+
+                if (workerName1 != null && workerName1.length() > 0 && !workerName1.equalsIgnoreCase("SELECT")) {
+
+                    spinnerWorkerName = workerName1;
+
+                }else if (workerName1.equalsIgnoreCase("SELECT")) {
+
+
+                    clearSpinners();
+                }
+
+
+
+                break;
+
+            case R.id.spin_adi_number:
+
+
+                adiNumber1 = adapterView.getItemAtPosition(workerPosition).toString();
+
+
+                if (adiNumber1 != null && adiNumber1.trim().length() > 0 && !adiNumber1.equalsIgnoreCase("SELECT")) {
+
+                    spinnerAdiNumber = adiNumber1;
+
+
+                }else if (adiNumber1.equalsIgnoreCase("SELECT")) {
+
+
+                    clearSpinners();
+                }
+
+
 
                 break;
 
@@ -718,6 +793,23 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         }
 
         return super.onOptionsItemSelected(item);
+
     }
 
+    @Override
+    public void freezeComponent(boolean b) {
+
+        Log.e(TAG, "freezeComponent: "+b );
+
+        if(!b){
+
+            spinJobName.setEnabled(true);
+
+        }else{
+
+            spinJobName.setEnabled(false);
+
+        }
+
+    }
 }

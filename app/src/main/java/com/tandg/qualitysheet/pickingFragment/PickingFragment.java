@@ -2,6 +2,7 @@ package com.tandg.qualitysheet.pickingFragment;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ import com.tandg.qualitysheet.R;
 import com.tandg.qualitysheet.database.dataSource.QualityInfoDataSource;
 import com.tandg.qualitysheet.di.DependencyInjector;
 import com.tandg.qualitysheet.helper.ApplicationHelper;
+import com.tandg.qualitysheet.listeners.ViewCallback;
 import com.tandg.qualitysheet.model.QualityInfo;
 import com.tandg.qualitysheet.model.SpinInfo;
 import com.tandg.qualitysheet.qualitySheetActivity.QualitySheetActivity;
@@ -116,6 +118,7 @@ public class PickingFragment extends BaseFragment<PickingFragmentPresenter> impl
     ArrayList<String> WorkersName, ADICode;
     ArrayList<String> ssCombinedData, ssPercentage;
     boolean isVisited = false;
+    private ViewCallback mListener;
 
 
 
@@ -172,10 +175,21 @@ public class PickingFragment extends BaseFragment<PickingFragmentPresenter> impl
         btnSubmit.setOnClickListener(this);
 
 
-        getQualityPercentageFromSheet();
+        if(ApplicationUtils.isConnected(mActivity)) {
+
+            getQualityPercentageFromSheet();
+
+        }else{
+
+            mListener.freezeComponent(false);
+            displayPercentageData();
+        }
 
 
         initSpinners();
+
+
+
 
 
     }
@@ -235,9 +249,11 @@ public class PickingFragment extends BaseFragment<PickingFragmentPresenter> impl
 
         }else {
 
+            mListener.freezeComponent(false);
+
             qualityInfoDataSource.open();
 
-            globalQualityInfo = qualityInfoDataSource.getQualityInfoByJobAndWorkerName(workerName1, argJobName);
+            globalQualityInfo = qualityInfoDataSource.getQualityInfoByJobAndWorkerName(argWorkerName, argJobName);
 
             qualityInfoDataSource.close();
 
@@ -258,7 +274,6 @@ public class PickingFragment extends BaseFragment<PickingFragmentPresenter> impl
 
         }
     }
-
     private int getCategoryPosCombinedData(String category) {
         return ssCombinedData.lastIndexOf(category);
     }
@@ -283,6 +298,7 @@ public class PickingFragment extends BaseFragment<PickingFragmentPresenter> impl
                             }
                             displayPercentageData();
 
+                            mListener.freezeComponent(false);
 
 
                         }catch (JSONException e){e.printStackTrace();}
@@ -309,7 +325,23 @@ public class PickingFragment extends BaseFragment<PickingFragmentPresenter> impl
     }
 
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof ViewCallback) {
+            //init the listener
+            mListener = (ViewCallback) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement InteractionListener");
+        }
+    }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
 
 
     private void initSpinners() {
