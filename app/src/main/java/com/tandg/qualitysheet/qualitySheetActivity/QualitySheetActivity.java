@@ -53,19 +53,23 @@ import java.util.List;
 
 import butterknife.BindView;
 
-public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> implements QualitySheetContract.View, View.OnClickListener, AdapterView.OnItemSelectedListener, ViewCallback{
+public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> implements QualitySheetContract.View, View.OnClickListener, AdapterView.OnItemSelectedListener, ViewCallback {
 
     private static final String TAG = QualitySheetActivity.class.getSimpleName();
 
     //@formatter:off
 
 
-    @BindView(R.id.spin_auditor_name)              Spinner spinAuditorName;
-    @BindView(R.id.spin_job_name)                  Spinner spinJobName;
-    @BindView(R.id.spin_house_number)              Spinner spinHousenumber;
-    @BindView(R.id.spin_worker_name)               SearchableSpinner spinWorkerName;
-    @BindView(R.id.spin_adi_number)                Spinner spinAdiNumber;
-
+    @BindView(R.id.spin_auditor_name)
+    Spinner spinAuditorName;
+    @BindView(R.id.spin_job_name)
+    Spinner spinJobName;
+    @BindView(R.id.spin_house_number)
+    Spinner spinHousenumber;
+    @BindView(R.id.spin_worker_name)
+    SearchableSpinner spinWorkerName;
+    @BindView(R.id.spin_adi_number)
+    Spinner spinAdiNumber;
 
 
     //@formatter:on
@@ -75,8 +79,9 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
     private String spinnerAuditorName, spinnerJobName, spinnerWeekNumber, spinnerHouseNumber, spinnerWorkerName, spinnerAdiNumber;
     private String auditorName, jobName, weekNumber, houseNumber, workerName1, adiNumber1;
     ArrayList<String> WorkersName, ADICode;
+    ArrayList<String> OfflineWorkersName, OfflineADICode;
     ArrayList<String> ssCombinedData, ssPercentage;
-    private int                                         workerPosition, combinedPos;
+    private int workerPosition, combinedPos;
     private boolean isAuditor = false;
     private boolean isWeekNumber = false;
     private boolean isHouseNumber = false;
@@ -106,10 +111,10 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         spinAuditorName.setEnabled(true);
 
 
-        WorkersName       = new ArrayList<>();
-        ADICode           = new ArrayList<>();
-        ssCombinedData    = new ArrayList<>();
-        ssPercentage      = new ArrayList<>();
+        WorkersName = new ArrayList<>();
+        ADICode = new ArrayList<>();
+        ssCombinedData = new ArrayList<>();
+        ssPercentage = new ArrayList<>();
 
 
         spinJobName.setOnItemSelectedListener(this);
@@ -121,35 +126,41 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
         spinnerWeekNumber = ApplicationUtils.getDateTime();
 
+        if (ApplicationUtils.isConnected(getApplicationContext())) {
+
+            Log.e(TAG, "Connected To Internet");
+
+        } else {
+
+            Log.e(TAG, "Not Connected To Internet");
+
+        }
+
         initListners();
 
         initSpinners();
 
-        if(ApplicationUtils.isConnected(getApplicationContext())){
+        if (ApplicationUtils.isConnected(getApplicationContext())) {
 
             getItems();
 
             getQualityPercentageFromSheet();
 
 
-        }else {
+        } else {
 
-            List<String> arrayList = Arrays.asList(getResources().getStringArray(R.array.fav_names));
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.layout_spinner_label, arrayList);
-            arrayAdapter.setDropDownViewResource(R.layout.layout_spinner_label);
-            spinWorkerName.setAdapter(arrayAdapter);
+                List<String> arrayList = Arrays.asList(getResources().getStringArray(R.array.fav_names));
+                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.layout_spinner_label, arrayList);
+                arrayAdapter.setDropDownViewResource(R.layout.layout_spinner_label);
+                spinWorkerName.setAdapter(arrayAdapter);
 
-            List<String> arrayList1 = Arrays.asList(getResources().getStringArray(R.array.fav_adi));
-            ArrayAdapter<String> arrayAdapter1 = new ArrayAdapter<String>(getApplicationContext(), R.layout.layout_spinner_label, arrayList1);
-            arrayAdapter1.setDropDownViewResource(R.layout.layout_spinner_label);
-            spinAdiNumber.setAdapter(arrayAdapter1);
-
-
+                List<String> arrayList1 = Arrays.asList(getResources().getStringArray(R.array.fav_adi));
+                ArrayAdapter<String> arrayAdapter1 = new ArrayAdapter<String>(getApplicationContext(), R.layout.layout_spinner_label, arrayList1);
+                arrayAdapter1.setDropDownViewResource(R.layout.layout_spinner_label);
+                spinAdiNumber.setAdapter(arrayAdapter1);
 
 
         }
-
-
 
 
         navigateToFragments();
@@ -157,10 +168,10 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
     }
 
 
-
     private int getCategoryPosCombinedData(String category) {
         return ssCombinedData.lastIndexOf(category);
     }
+
     private void getQualityPercentageFromSheet() {
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, "https://script.google.com/macros/s/AKfycbxB6eqo6n7rPW1jzuGfJOxojLEqI_hfOMhcg3BCPc3ssnCrJ5o/exec?action=getFavData",
@@ -168,21 +179,22 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     @Override
                     public void onResponse(String response) {
 
-                        try{
-                            JSONObject jsonObject=new JSONObject(response);
-                            JSONArray jsonArray=jsonObject.getJSONArray("items");
-                            for(int i=0;i<jsonArray.length();i++){
-                                JSONObject jsonObject1=jsonArray.getJSONObject(i);
-                                String Combined     =jsonObject1.getString("combinedData");
-                                String Quality      =jsonObject1.getString("percent");
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            JSONArray jsonArray = jsonObject.getJSONArray("items");
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject jsonObject1 = jsonArray.getJSONObject(i);
+                                String Combined = jsonObject1.getString("combinedData");
+                                String Quality = jsonObject1.getString("percent");
 
                                 ssCombinedData.add(Combined);
                                 ssPercentage.add(Quality);
                             }
 
 
-
-                        }catch (JSONException e){e.printStackTrace();}
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
 
 
                     }
@@ -212,25 +224,31 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     @Override
                     public void onResponse(String response) {
 
-                        try{
-                            JSONObject jsonObject=new JSONObject(response);
-                            JSONArray jsonArray=jsonObject.getJSONArray("items");
-                            for(int i=0;i<jsonArray.length();i++){
-                                JSONObject jsonObject1=jsonArray.getJSONObject(i);
-                                String name1=jsonObject1.getString("workersName");
-                                String adi1=jsonObject1.getString("adiCode");
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            JSONArray jsonArray = jsonObject.getJSONArray("items");
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject jsonObject1 = jsonArray.getJSONObject(i);
+                                String name1 = jsonObject1.getString("workersName");
+                                String adi1 = jsonObject1.getString("adiCode");
 
                                 WorkersName.add(name1);
                                 ADICode.add(adi1);
+
+                                if (WorkersName != null && ADICode != null) {
+
+                                    OfflineWorkersName = WorkersName;
+                                    OfflineADICode = ADICode;
+                                }
                             }
 
 
                             setSpinner();
 
 
-
-                        }catch (JSONException e){e.printStackTrace();}
-
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
 
 
                     }
@@ -253,7 +271,6 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         queue.add(stringRequest);
 
     }
-
 
 
     private void setSpinner() {
@@ -377,9 +394,9 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinWorkerName.setEnabled(true);
 
 
-                }else {
+                } else {
 
-                    Log.e(TAG, "Adapter is null" );
+                    Log.e(TAG, "Adapter is null");
                 }
             }
 
@@ -442,7 +459,6 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         arrayList.add(new SpinInfo(4, "Seeta Singh"));
 
 
-
         ArrayAdapter<SpinInfo> arrayAdapter = new ArrayAdapter<SpinInfo>(getApplicationContext(), R.layout.layout_spinner_label, arrayList);
         arrayAdapter.setDropDownViewResource(R.layout.layout_spinner_label);
         spinAuditorName.setAdapter(arrayAdapter);
@@ -467,8 +483,6 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
         ApplicationUtils.hideKeypad(getApplicationContext(), spinAuditorName);
         ApplicationUtils.hideKeypad(getApplicationContext(), spinAdiNumber);
         ApplicationUtils.hideKeypad(getApplicationContext(), spinWorkerName);
-
-
 
 
     }
@@ -521,7 +535,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
                 jobName = adapterView.getItemAtPosition(i).toString();
 
-                if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Dropping") && spinnerAuditorName!= null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
+                if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Dropping") && spinnerAuditorName != null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
 
                     spinnerJobName = jobName;
                     spinAuditorName.setEnabled(false);
@@ -543,7 +557,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     fragmentTransaction.addToBackStack("tag");
                     fragmentTransaction.commitAllowingStateLoss();
 
-                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Clipping") && spinnerAuditorName!= null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
+                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Clipping") && spinnerAuditorName != null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
 
                     spinnerJobName = jobName;
                     spinAuditorName.setEnabled(false);
@@ -565,7 +579,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     fragmentTransaction.commitAllowingStateLoss();
 
 
-                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Deleafing") && spinnerAuditorName!= null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
+                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Deleafing") && spinnerAuditorName != null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
 
                     spinnerJobName = jobName;
                     spinAuditorName.setEnabled(false);
@@ -587,7 +601,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     fragmentTransaction.commitAllowingStateLoss();
 
 
-                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Pruning") && spinnerAuditorName!= null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
+                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Pruning") && spinnerAuditorName != null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
 
                     spinnerJobName = jobName;
                     spinAuditorName.setEnabled(false);
@@ -609,7 +623,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     fragmentTransaction.commitAllowingStateLoss();
 
 
-                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Twisting") && spinnerAuditorName!= null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
+                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Twisting") && spinnerAuditorName != null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
 
                     spinnerJobName = jobName;
                     spinAuditorName.setEnabled(false);
@@ -631,7 +645,7 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     fragmentTransaction.commitAllowingStateLoss();
 
 
-                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Picking") && spinnerAuditorName!= null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
+                } else if (jobName != null && jobName.trim().length() > 0 && !jobName.equalsIgnoreCase("SELECT") && jobName.equalsIgnoreCase("Picking") && spinnerAuditorName != null && spinnerWorkerName != null && spinnerHouseNumber != null && !spinnerAuditorName.equalsIgnoreCase("SELECT") && !spinnerHouseNumber.equalsIgnoreCase("SELECT") && !spinnerWorkerName.equalsIgnoreCase("SELECT")) {
 
                     spinnerJobName = jobName;
                     spinAuditorName.setEnabled(false);
@@ -668,10 +682,10 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                         fragmentTransaction.commit();
                     }
 
-                }else {
+                } else {
 
                     clearSpinners();
-                    Toast.makeText(getApplicationContext(),"Please fill all the drop boxes",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Please fill all the drop boxes", Toast.LENGTH_SHORT).show();
                 }
 
 
@@ -713,12 +727,11 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
 
                     spinnerWorkerName = workerName1;
 
-                }else if (workerName1.equalsIgnoreCase("SELECT")) {
+                } else if (workerName1.equalsIgnoreCase("SELECT")) {
 
 
                     clearSpinners();
                 }
-
 
 
                 break;
@@ -734,12 +747,11 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
                     spinnerAdiNumber = adiNumber1;
 
 
-                }else if (adiNumber1.equalsIgnoreCase("SELECT")) {
+                } else if (adiNumber1.equalsIgnoreCase("SELECT")) {
 
 
                     clearSpinners();
                 }
-
 
 
                 break;
@@ -806,13 +818,13 @@ public class QualitySheetActivity extends BaseActivity<QualitySheetPresenter> im
     @Override
     public void freezeComponent(boolean b) {
 
-        Log.e(TAG, "freezeComponent: "+b );
+        Log.e(TAG, "freezeComponent: " + b);
 
-        if(!b){
+        if (!b) {
 
             spinJobName.setEnabled(true);
 
-        }else{
+        } else {
 
             spinJobName.setEnabled(false);
 
